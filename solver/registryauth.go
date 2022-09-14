@@ -28,6 +28,8 @@ func NewRegistryAuthProvider() *RegistryAuthProvider {
 	}
 
 	registry.AddCredentials("docker.io", "", "")
+	registry.AddCredentials("registry.gitlab.com", "", "")
+
 	return registry
 }
 
@@ -48,6 +50,29 @@ func (a *RegistryAuthProvider) AddCredentials(target, username, secret string) {
 				u = val
 			}
 			if strings.EqualFold(key, "dockerhub_auth_password") {
+				s = val
+			}
+		}
+
+		if u != "" && s != "" {
+			username = u
+			secret = s
+		}
+	}
+
+	if target == "registry.gitlab.com" && username == "" && secret == "" {
+		// Collect DOCKERHUB_AUTH_USER && DOCKERHUB_AUTH_PASSWORD env vars
+		u, s := "", ""
+		for _, envVar := range os.Environ() {
+			split := strings.SplitN(envVar, "=", 2)
+			if len(split) != 2 {
+				continue
+			}
+			key, val := split[0], split[1]
+			if strings.EqualFold(key, "gitlab_auth_user") {
+				u = val
+			}
+			if strings.EqualFold(key, "gitlab_auth_password") {
 				s = val
 			}
 		}
