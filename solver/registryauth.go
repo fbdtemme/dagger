@@ -29,6 +29,7 @@ func NewRegistryAuthProvider() *RegistryAuthProvider {
 
 	registry.AddCredentials("docker.io", "", "")
 	registry.AddCredentials("registry.gitlab.com", "", "")
+	registry.AddCredentials("ghcr.io", "", "")
 
 	return registry
 }
@@ -61,7 +62,7 @@ func (a *RegistryAuthProvider) AddCredentials(target, username, secret string) {
 	}
 
 	if target == "registry.gitlab.com" && username == "" && secret == "" {
-		// Collect DOCKERHUB_AUTH_USER && DOCKERHUB_AUTH_PASSWORD env vars
+		// Collect GITLAB_AUTH_USER && GITLAB_AUTH_PASSWORD env vars
 		u, s := "", ""
 		for _, envVar := range os.Environ() {
 			split := strings.SplitN(envVar, "=", 2)
@@ -73,6 +74,29 @@ func (a *RegistryAuthProvider) AddCredentials(target, username, secret string) {
 				u = val
 			}
 			if strings.EqualFold(key, "gitlab_auth_password") {
+				s = val
+			}
+		}
+
+		if u != "" && s != "" {
+			username = u
+			secret = s
+		}
+	}
+
+	if target == "ghcr.io" && username == "" && secret == "" {
+		// Collect GITHUB_AUTH_USER && GITHUB_AUTH_PASSWORD env vars
+		u, s := "", ""
+		for _, envVar := range os.Environ() {
+			split := strings.SplitN(envVar, "=", 2)
+			if len(split) != 2 {
+				continue
+			}
+			key, val := split[0], split[1]
+			if strings.EqualFold(key, "github_auth_user") {
+				u = val
+			}
+			if strings.EqualFold(key, "github_auth_password") {
 				s = val
 			}
 		}
